@@ -1,9 +1,13 @@
 package com.example.mycompass
 
+import android.content.Context
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import android.os.Bundle
+import android.view.animation.Animation
+import android.view.animation.RotateAnimation
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
@@ -13,6 +17,9 @@ import com.example.mycompass.databinding.ActivityMainBinding
 class MainActivity : AppCompatActivity(),SensorEventListener {
 
     lateinit var binding: ActivityMainBinding
+    var currentDegree=0f
+    var sensorManager : SensorManager? =null
+    var sensor: Sensor? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -25,14 +32,34 @@ class MainActivity : AppCompatActivity(),SensorEventListener {
             insets
         }
 
+        sensorManager =getSystemService(Context.SENSOR_SERVICE) as SensorManager
+        sensor = sensorManager!!.getDefaultSensor(Sensor.TYPE_ORIENTATION)
 
+    }
+
+    override fun onResume() {
+        super.onResume()
+        sensorManager?.registerListener(this,sensor,SensorManager.SENSOR_DELAY_GAME)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        sensorManager?.unregisterListener(this)
     }
 
     override fun onSensorChanged(event: SensorEvent?) {
-        TODO("Not yet implemented")
+        val degree =Math.round(event?.values?.get(0)!!)
+        binding.tvDegree.setText(degree.toString()+"  Degree")
+        val rotateAnimation = RotateAnimation(currentDegree,(-degree).toFloat(), Animation.RELATIVE_TO_SELF,0.5f,
+            Animation.RELATIVE_TO_SELF,0.5f)
+
+        rotateAnimation.duration =210
+        rotateAnimation.fillAfter = true
+
+        binding.ivCompass.startAnimation(rotateAnimation)
+        currentDegree= (-degree).toFloat()
     }
 
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
-        TODO("Not yet implemented")
     }
 }
